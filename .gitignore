@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary and cache files
+.streamlit/
+*.tmp
+temp_custom_upload.mp4
+
+# OS generated files
+Thumbs.db
+.DS_Store
