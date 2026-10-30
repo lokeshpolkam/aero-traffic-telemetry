@@ -10,6 +10,23 @@ import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
+import torch
+
+# PyTorch 2.6+ compatibility
+try:
+    from ultralytics.nn.tasks import DetectionModel
+    if hasattr(torch.serialization, "add_safe_globals"):
+        torch.serialization.add_safe_globals([DetectionModel])
+except Exception:
+    pass
+
+_orig_torch_load = torch.load
+def _safe_torch_load(*args, **kwargs):
+    if "weights_only" not in kwargs:
+        kwargs["weights_only"] = False
+    return _orig_torch_load(*args, **kwargs)
+torch.load = _safe_torch_load
+
 from tracker_engine import EdgeVisionTracker, CLASS_NAMES
 
 # Page Configuration
@@ -195,7 +212,7 @@ if run_pipeline:
         
         # Convert BGR to RGB for Streamlit canvas
         frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-        video_placeholder.image(frame_rgb, use_column_width=True)
+        video_placeholder.image(frame_rgb, use_container_width=True)
         
         # Update KPI Metric Cards
         st_color = "#00e676" if "FLUID" in telemetry["congestion_status"] else ("#ffab00" if "MODERATE" in telemetry["congestion_status"] else "#ff1744")
@@ -251,7 +268,7 @@ else:
     # Display preview image when on standby
     preview_img = cv2.imread("report_assets/fig_telemetry_hud.png")
     if preview_img is not None:
-        video_placeholder.image(cv2.cvtColor(preview_img, cv2.COLOR_BGR2RGB), use_column_width=True, caption="Surveillance Stream Standby: Press 'Start Video Tracking Pipeline' to stream live.")
+        video_placeholder.image(cv2.cvtColor(preview_img, cv2.COLOR_BGR2RGB), use_container_width=True, caption="Surveillance Stream Standby: Press 'Start Video Tracking Pipeline' to stream live.")
     table_placeholder.info("Click '▶ Start Video Tracking Pipeline' in the sidebar to initiate real-time telemetry extraction.")
 
 # ----------------- TECHNICAL & VIVA EXPLANATION -----------------

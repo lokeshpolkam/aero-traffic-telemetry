@@ -7,6 +7,23 @@ Computes real-time object trajectories, velocity estimation, and virtual line co
 import cv2
 import numpy as np
 from collections import defaultdict, deque
+import torch
+
+# PyTorch 2.6+ compatibility: allow DetectionModel and patch weights_only default
+try:
+    from ultralytics.nn.tasks import DetectionModel
+    if hasattr(torch.serialization, "add_safe_globals"):
+        torch.serialization.add_safe_globals([DetectionModel])
+except Exception:
+    pass
+
+_orig_torch_load = torch.load
+def _safe_torch_load(*args, **kwargs):
+    if "weights_only" not in kwargs:
+        kwargs["weights_only"] = False
+    return _orig_torch_load(*args, **kwargs)
+torch.load = _safe_torch_load
+
 from ultralytics import YOLO
 
 # Standard COCO class mappings for surveillance
