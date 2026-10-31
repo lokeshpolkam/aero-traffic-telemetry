@@ -12,5 +12,5 @@ echo [1/2] Verifying Python Dependencies...
 pip install -r requirements.txt --quiet --disable-pip-version-check
 
 echo [2/2] Launching Smart City Surveillance Operations Center...
-streamlit run app.py --server.headless=true
+python -m streamlit run app.py --server.port 8502
 pause
