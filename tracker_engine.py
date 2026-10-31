@@ -4,6 +4,7 @@ Powered by YOLOv8 and ByteTrack (Kalman Filter + Hungarian Algorithm)
 Computes real-time object trajectories, velocity estimation, and virtual line counting.
 """
 
+import os
 import cv2
 import numpy as np
 from collections import defaultdict, deque
@@ -48,7 +49,12 @@ CLASS_COLORS = {
 
 class EdgeVisionTracker:
     def __init__(self, model_path="yolov8n.pt", max_trail_len=30):
-        # Load local YOLOv8 weights (zero cloud download required)
+        # Resolve local YOLOv8 weights (zero cloud download required)
+        if not os.path.isabs(model_path):
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            candidate = os.path.join(base_dir, model_path)
+            if os.path.exists(candidate):
+                model_path = candidate
         self.model = YOLO(model_path)
         self.max_trail_len = max_trail_len
         

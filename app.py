@@ -29,6 +29,15 @@ torch.load = _safe_torch_load
 
 from tracker_engine import EdgeVisionTracker, CLASS_NAMES
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def render_image(placeholder, img, caption=None):
+    """Compatible with both older (<=1.32) and newer (>=1.35) Streamlit versions."""
+    try:
+        placeholder.image(img, use_container_width=True, caption=caption)
+    except TypeError:
+        placeholder.image(img, use_column_width=True, caption=caption)
+
 # Page Configuration
 st.set_page_config(
     page_title="AERO-TRAFFIC | Autonomous Edge-AI Multi-Target Telemetry",
@@ -78,7 +87,8 @@ st.markdown("""
 @st.cache_resource
 def load_tracker():
     """Caches YOLOv8 tracker in RAM for instant inference."""
-    return EdgeVisionTracker("yolov8n.pt")
+    model_file = os.path.join(BASE_DIR, "yolov8n.pt")
+    return EdgeVisionTracker(model_file)
 
 tracker = load_tracker()
 
@@ -98,7 +108,7 @@ source_mode = st.sidebar.selectbox(
 )
 
 video_path = None
-samples_dir = "samples"
+samples_dir = os.path.join(BASE_DIR, "samples")
 
 if "Camera-01" in source_mode:
     video_path = os.path.join(samples_dir, "highway_traffic_camera_01.mp4")
@@ -212,7 +222,7 @@ if run_pipeline:
         
         # Convert BGR to RGB for Streamlit canvas
         frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-        video_placeholder.image(frame_rgb, use_container_width=True)
+        render_image(video_placeholder, frame_rgb)
         
         # Update KPI Metric Cards
         st_color = "#00e676" if "FLUID" in telemetry["congestion_status"] else ("#ffab00" if "MODERATE" in telemetry["congestion_status"] else "#ff1744")
@@ -266,9 +276,10 @@ if run_pipeline:
         )
 else:
     # Display preview image when on standby
-    preview_img = cv2.imread("report_assets/fig_telemetry_hud.png")
+    preview_path = os.path.join(BASE_DIR, "report_assets", "fig_telemetry_hud.png")
+    preview_img = cv2.imread(preview_path)
     if preview_img is not None:
-        video_placeholder.image(cv2.cvtColor(preview_img, cv2.COLOR_BGR2RGB), use_container_width=True, caption="Surveillance Stream Standby: Press 'Start Video Tracking Pipeline' to stream live.")
+        render_image(video_placeholder, cv2.cvtColor(preview_img, cv2.COLOR_BGR2RGB), caption="Surveillance Stream Standby: Press 'Start Video Tracking Pipeline' to stream live.")
     table_placeholder.info("Click '▶ Start Video Tracking Pipeline' in the sidebar to initiate real-time telemetry extraction.")
 
 # ----------------- TECHNICAL & VIVA EXPLANATION -----------------
